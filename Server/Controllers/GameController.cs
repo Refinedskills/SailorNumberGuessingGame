@@ -37,6 +37,7 @@ namespace SailorNumberGuessingGame.Server.Controllers
     /// Login (or autoregistrate) a player
     /// </summary>
     [HttpPost("api/login")]
+    [SwaggerOperation(Tags = new[] { "Authentication" })]
     public async Task<ActionResult<Model.ServiceResponse<Model.Player>>> Login(string playerName, string playerBirthDate, bool autoRegistration = true)
     {
       try
@@ -93,7 +94,9 @@ namespace SailorNumberGuessingGame.Server.Controllers
       return Ok(games);
     }
 
-    // Game
+    /// <summary>
+    /// Start a new game
+    /// </summary>
     [HttpPost("api/players/{player_id}/game/{nr_of_digits}")]
     [SwaggerOperation(Tags = new[] { "Games" })]
     [ProducesResponseType(typeof(Model.Game), 201)]
@@ -127,6 +130,10 @@ namespace SailorNumberGuessingGame.Server.Controllers
       }
       return CreatedAtAction("StartNewGame", new { game_id = newGame.Id });
     }
+
+    /// <summary>
+    /// Make a guess
+    /// </summary>
     [HttpPost]
     [Route("api/players/{player_id}/game/{game_id}/guess/{entered_number}")]
     [SwaggerOperation(Tags = new[] { "Games" })]
@@ -171,6 +178,7 @@ namespace SailorNumberGuessingGame.Server.Controllers
         NumberEntered = entered_number,
         NumberOfShips = result.CorrectDigitLocations,
         NumberOfBuoys = result.CorrectDigits,
+        GuessedDate = DateTime.Now
       };
 
       try
@@ -184,12 +192,28 @@ namespace SailorNumberGuessingGame.Server.Controllers
         _logger.LogError($"{errorResult.Title}: {errorResult.Detail}. Stack trace: {ex.StackTrace}");
         return StatusCode((int)HttpStatusCode.InternalServerError, errorResult);
       }
-      return CreatedAtAction("MakeGuess", new { 
-        player_id = player_id, 
-        game_id = game.Id,
 
-      });
+      // Number guessed? then update Game
+      if (result.CompareNumbersResultCode == CompareNumbersResultCode.COMPARENUMBERS_SAME)
+      {
+        game.successful = true;
+        game.GameEnded = DateTime.Now;
+
+        try
+        {
+          UnitOfWork.GameRepository.Update(game);
+          await UnitOfWork.Save();
+        }
+        catch (Exception ex)
+        {
+          var errorResult = ErrorHelper.CreateErrorResultFromException(ex, "Error updating game", ErrorCode.GAMES_UPDATE_GAME_ERROR.ToString());
+          _logger.LogError($"{errorResult.Title}: {errorResult.Detail}. Stack trace: {ex.StackTrace}");
+          return StatusCode((int)HttpStatusCode.InternalServerError, errorResult);
+        }
+
+      }
+
+      return CreatedAtAction("MakeGuess", new { Result = result });
     }
-
   }
 }

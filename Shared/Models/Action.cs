@@ -16,7 +16,7 @@ public class Action
   [ForeignKey("GameId")]
   public Game Game { get; set; }
 
-  DateTime GuessedDate { get; set; }
+  public DateTime GuessedDate { get; set; }
   public string NumberEntered { get; set; }
 
   public int NumberOfShips { get; set;}

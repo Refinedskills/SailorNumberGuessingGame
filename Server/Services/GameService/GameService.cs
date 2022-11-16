@@ -42,6 +42,7 @@ namespace SailorNumberGuessingGame.Server.Services.GameService
         }
         dtoPlayer = new Model.DTO.DtoPlayer(dbPlayer);
         success = true;
+        message = "Successfull login";
       }
       catch (Exception ex)
       {
@@ -56,15 +57,6 @@ namespace SailorNumberGuessingGame.Server.Services.GameService
       };
     }
 
-    public async Task<Model.ServiceResponse<List<Model.Player>>> GetPlayersAsync()
-    {
-      return new Model.ServiceResponse<List<Model.Player>>
-      {
-        Data = await _dbContext.Players.ToListAsync(),
-        Message = "",
-        Success = true
-      };
-    }
 
     public string PickRandomNumber(int numberOfDigits)
     {
@@ -77,7 +69,7 @@ namespace SailorNumberGuessingGame.Server.Services.GameService
       int correctDigitLocations = 0;
       int correctDigits = 0;
 
-      // TODO !!!!! Maak SOLID, b.v. via helper class
+      // TODO : Maak SOLID !!!! , b.v. via class + separate methods
       // Check expected number format
       if (string.IsNullOrEmpty(expectedNumber) || !expectedNumber.All(char.IsDigit))
         compareNumbersResultCode = CompareNumbersResultCode.COMPARENUMBERS_EXPEXTEDNUMBERFORMAT_NOT_CORRECT;      
@@ -86,7 +78,11 @@ namespace SailorNumberGuessingGame.Server.Services.GameService
         compareNumbersResultCode = CompareNumbersResultCode.COMPARENUMBERS_ENTEREDNUMBERFORMAT_NOT_CORRECT;
       // You guess is CORRECT !!!!!!!!!!!!!!!!!
       else if (expectedNumber == enteredNumber)
+      {
+        correctDigitLocations = expectedNumber.Length;
         compareNumbersResultCode = CompareNumbersResultCode.COMPARENUMBERS_SAME;
+      }
+
       // Tja, sometimes you are wrong, I give a hint ..... 
       else
       {

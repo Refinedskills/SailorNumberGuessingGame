@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using SailorNumberGuessingGame.Server.DAL;
+using System.Reflection;
+using SailorNumberGuessingGame.Server.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,13 @@ builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+  // add a custom operation filter which sets default values
+  options.OperationFilter<SwaggerDefaultValues>();
+  options.CustomSchemaIds(x => x.FullName);
+  options.EnableAnnotations();
+  //options.OperationFilter<AddResponseHeadersFilter>();
+  options.OrderActionsBy((apiDescr) => apiDescr.GroupName);
+
   options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
   {
     Description = "Standard Authorization header using the Bearer scheme",
@@ -34,6 +43,10 @@ builder.Services.AddSwaggerGen(options =>
     Name = "Authorization",
     Type = SecuritySchemeType.ApiKey
   });
+
+  // using System.Reflection;
+  var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+  options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 
   //options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
