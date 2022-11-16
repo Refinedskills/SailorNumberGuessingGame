@@ -1,0 +1,9 @@
+﻿@page "/gameapi"
+@inject IJSRuntime jsRuntime
+
+@code {
+  protected override async Task OnInitializedAsync()
+  {
+    await jsRuntime.InvokeAsync<object>("open", "/swagger", "_blank");
+  }
+}
